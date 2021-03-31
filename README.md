@@ -1,6 +1,6 @@
 # Discord420Bot
 
-**TODO: Add description**
+Discord bot which notifies people when its 4:20
 
 ## Installation
 
