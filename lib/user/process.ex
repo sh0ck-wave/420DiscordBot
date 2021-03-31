@@ -1,17 +1,25 @@
 defmodule User.Process do
   use GenServer, restart: :temporary
 
-  def init(user) do
-    {:ok, user || %User.Data{}}
+  def init(user_id) do
+    send(self(), :load)
+    {:ok, User.Data.new(user_id)}
   end
 
   def start_link(%User.Id{} = user_id) do
-    GenServer.start_link(__MODULE__, User.Data.new(user_id), name: via_tuple(user_id))
+    GenServer.start_link(__MODULE__, user_id, name: via_tuple(user_id))
   end
 
   def handle_info(:notification_event, %User.Data{} = user) do
     Discord.Message.send_420_message(user)
     {:noreply, User.Data.set_timer(user, self())}
+  end
+
+  def handle_info(:load, %User.Data{} = user) do
+    case Database.User.get(user.id) do
+      nil -> {:noreply, user}
+      user_from_disk -> {:noreply, User.Data.set_timer(user_from_disk, self())}
+    end
   end
 
   def handle_call({:get_state}, _from, %User.Data{}=user) do
@@ -20,7 +28,10 @@ defmodule User.Process do
 
   def handle_call({:set_timezone, timezone}, _from, %User.Data{}=user) do
     case User.Data.set_timezone(user, timezone) do
-      {:ok, u} -> {:reply, :ok, User.Data.set_timer(u, self())}
+      {:ok, u} ->
+        new_user = User.Data.set_timer(u, self())
+        Database.User.store(new_user)
+        {:reply, :ok, new_user}
       {:error, u} -> {:reply, :error, u}
     end
   end

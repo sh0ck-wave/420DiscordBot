@@ -4,6 +4,8 @@ defmodule RootSupervisor do
   def init(_args) do
     children = [
       {Registry, name: :user_registry, keys: :unique},
+      {Database.Guild, ["data_store/guilds"]},
+      {Database.User, ["data_store/users"]},
       {User.Supervisor, []},
       {User.Cache, []},
       {Registry, name: :guild_registry, keys: :unique},

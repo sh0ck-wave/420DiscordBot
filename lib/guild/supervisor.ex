@@ -11,7 +11,7 @@ defmodule Guild.Supervisor do
   end
 
   def start_child(guild_id) do
-    {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {Guild.Process, Guild.Data.new(guild_id)})
+    {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {Guild.Process, guild_id})
     pid
   end
 

@@ -1,13 +1,13 @@
 defmodule Guild.Process do
   use GenServer, restart: :temporary
 
-  def init(%Guild.Data{} = args) do
-    send(self(), :set_initial_channel)
-    {:ok, args}
+  def init(guild_id) do
+    send(self(), :load)
+    {:ok, Guild.Data.new(guild_id)}
   end
 
-  def start_link(%Guild.Data{} = guild) do
-    GenServer.start_link(__MODULE__, guild, name: via_tuple(guild.guild_id))
+  def start_link(guild_id) do
+    GenServer.start_link(__MODULE__, guild_id, name: via_tuple(guild_id))
   end
 
   defp via_tuple(guild_id) do
@@ -22,25 +22,24 @@ defmodule Guild.Process do
     {:reply, guild, guild}
   end
 
-  def handle_info(:set_initial_channel, %Guild.Data{} = guild) do
-    {:noreply,  Guild.Data.set_initial_channel(guild)}
+  def handle_info(:load, %Guild.Data{} = guild) do
+    case Database.Guild.get(guild.guild_id) do
+      nil ->  {:noreply,  Guild.Data.set_initial_channel(guild)}
+      guild_from_disk -> {:noreply, guild_from_disk}
+    end
   end
 
-  # def handle_cast({:set_channel_id, channel_id}, %Guild.Data{} = guild) do
-  #   {:noreply,  Guild.Data.set_channel_id(guild, channel_id)}
-  # end
-
   def handle_cast({:set_role_mention, role}, %Guild.Data{} = guild) do
-    {:noreply,  Guild.Data.set_role_mention(guild, role)}
+    new_guild = Guild.Data.set_role_mention(guild, role)
+    Database.Guild.store(new_guild)
+    {:noreply,  new_guild}
   end
 
   def handle_cast({:set_channel_name, channel_name}, %Guild.Data{} = guild) do
-    {:noreply,  Guild.Data.set_channel_by_name(guild, channel_name)}
+    new_guild = Guild.Data.set_channel_by_name(guild, channel_name)
+    Database.Guild.store(new_guild)
+    {:noreply,  new_guild}
   end
-
-  # def set_channel_id(guild_proc, channel_id) do
-  #   GenServer.cast(guild_proc, {:set_channel_id, channel_id})
-  # end
 
   def set_channel_name(guild_proc, channel_name) do
     GenServer.cast(guild_proc, {:set_channel_name, channel_name})
