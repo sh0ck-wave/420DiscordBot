@@ -19,7 +19,8 @@ defmodule Bot do
 
     Cogs.def gettz do
       tz = get_user_proc(message)
-      |> User.Process.get_timezone()
+      |> User.Process.get_user_state
+      |> User.Data.get_timezone
       Cogs.say("#{tz}")
     end
 
@@ -47,10 +48,29 @@ defmodule Bot do
       end
     end
 
-    Cogs.def set_channel(channel_name) do
+    Cogs.def getchannel() do
+      %Alchemy.Channel.TextChannel{name: channel_name} = Message.get_guild_id(message)
+      |> Guild.Cache.get_guild_process
+      |> Guild.Process.get_channel()
+      IO.inspect(channel_name)
+      Cogs.say("##{channel_name}")
+    end
+
+    Cogs.def setchannel(channel_name) do
       Message.get_guild_id(message)
       |> Guild.Cache.get_guild_process
       |> Guild.Process.set_channel_name(channel_name)
+    end
+
+    Cogs.def setrole(role_name) do
+      Message.get_guild_id(message)
+      |> Guild.Cache.get_guild_process
+      |> Guild.Process.set_role_mention(role_name)
+    end
+
+    Cogs.def test do
+      user_proc = get_user_proc(message)
+      send(user_proc, :notification_event)
     end
 
     def set_prefix do

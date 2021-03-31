@@ -16,7 +16,8 @@ defmodule Discord.Guild do
   end
 
   def get_default_channel(guild_id) do
-    Client.get_channels(guild_id)
+    {:ok, channels} = Client.get_channels(guild_id)
+    channels
     |> Stream.filter(&is_text_channel/1)
     |> Enum.min_by(fn ch -> ch.position || 100 end)
   end

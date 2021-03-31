@@ -9,14 +9,20 @@ defmodule User.Process do
     GenServer.start_link(__MODULE__, User.Data.new(user_id), name: via_tuple(user_id))
   end
 
-  def handle_call({:get_timezone}, _from, %User.Data{}=user) do
-    tz = User.Data.get_timezone(user)
-    {:reply, tz, user}
+  def handle_info(:notification_event, %User.Data{} = user) do
+    Discord.Message.send_420_message(user)
+    {:noreply, User.Data.set_timer(user, self())}
+  end
+
+  def handle_call({:get_state}, _from, %User.Data{}=user) do
+    {:reply, user, user}
   end
 
   def handle_call({:set_timezone, timezone}, _from, %User.Data{}=user) do
-    {result, user} = User.Data.set_timezone(user, timezone)
-    {:reply, result, user}
+    case User.Data.set_timezone(user, timezone) do
+      {:ok, u} -> {:reply, :ok, User.Data.set_timer(u, self())}
+      {:error, u} -> {:reply, :error, u}
+    end
   end
 
   defp via_tuple(%User.Id{}=user_id) do
@@ -27,21 +33,8 @@ defmodule User.Process do
     GenServer.call(user_proc, {:set_timezone, timezone})
   end
 
-  def get_timezone(user_proc) do
-    GenServer.call(user_proc, {:get_timezone})
+  def get_user_state(user_proc) do
+    GenServer.call(user_proc, {:get_state})
   end
 
-  # def child_spec(%User.Id} = user_id) do
-  #   %{
-  #     id: __MODULE__,
-  #     start: {__MODULE__, :start_link, [user_id]}
-  #   }
-  # end
-
-  # def child_spec(%User.Data{} = user) do
-  #   %{
-  #    id: __MODULE__,
-  #    start: {__MODULE__, :start_link, [user]}
-  #   }
-  # end
 end
