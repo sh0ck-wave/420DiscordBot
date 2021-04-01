@@ -24,6 +24,12 @@ defmodule Bot do
       Cogs.say("#{tz}")
     end
 
+    Cogs.def removetz do
+      user_proc = get_user_proc(message)
+      User.Process.remove_timezone(user_proc)
+      Cogs.say("Timezone cleared")
+    end
+
     Cogs.def settz do
       %Embed{}
       |> Embed.title("Set your timezone")
@@ -80,6 +86,10 @@ defmodule Bot do
 
   def start(_type, _args) do
     RootSupervisor.start_link()
+    User.Loader.start_link("data_store/users")
+
+
+
     run = Client.start("")
     Commands.set_prefix()
     use Commands

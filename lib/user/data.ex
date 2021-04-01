@@ -28,11 +28,22 @@ defmodule User.Data do
     end
   end
 
-  def set_timer(%User.Data{} = user, user_proc) do
-    new_timer = Process.send_after(user_proc, :notification_event, TimeCalculations.get_ms_to_420(user.timezone))
+  def remove_timezone(%User.Data{} = user) do
     case user.timer_ref do
       nil -> :ok
       timer_ref -> Process.cancel_timer(timer_ref, async: false, info: false)
+    end
+    %User.Data{user | timezone: nil, timer_ref: nil}
+  end
+
+  def set_timer(%User.Data{} = user, user_proc) do
+    new_timer = Process.send_after(user_proc, :notification_event, TimeCalculations.get_ms_to_420(user.timezone))
+    IO.puts("Created timer for #{user.id.user_id}")
+    case user.timer_ref do
+      nil -> :ok
+      timer_ref ->
+        IO.puts("Cancelled old timer for #{user.id.user_id}")
+        Process.cancel_timer(timer_ref, async: false, info: false)
     end
     %User.Data{ user | timer_ref: new_timer}
   end

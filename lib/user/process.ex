@@ -1,5 +1,5 @@
 defmodule User.Process do
-  use GenServer, restart: :temporary
+  use GenServer
 
   def init(user_id) do
     send(self(), :load)
@@ -16,6 +16,7 @@ defmodule User.Process do
   end
 
   def handle_info(:load, %User.Data{} = user) do
+    IO.puts("DB Loading user #{user.id.user_id}")
     case Database.User.get(user.id) do
       nil -> {:noreply, user}
       user_from_disk -> {:noreply, User.Data.set_timer(user_from_disk, self())}
@@ -36,12 +37,22 @@ defmodule User.Process do
     end
   end
 
+  def handle_cast(:remove_timezone, %User.Data{}=user) do
+    user = User.Data.remove_timezone(user)
+    Database.User.store(user)
+    {:noreply, user}
+  end
+
   defp via_tuple(%User.Id{}=user_id) do
     {:via, Registry, {:user_registry, user_id}}
   end
 
   def set_timezone(user_proc, timezone) do
     GenServer.call(user_proc, {:set_timezone, timezone})
+  end
+
+  def remove_timezone(user_proc) do
+    GenServer.cast(user_proc, :remove_timezone)
   end
 
   def get_user_state(user_proc) do
