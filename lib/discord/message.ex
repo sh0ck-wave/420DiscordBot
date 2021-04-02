@@ -12,6 +12,8 @@ defmodule Discord.Message do
     |> Guild.Cache.get_guild_process()
     |> Guild.Process.get_guild_state()
 
+    IO.puts("Started sending Message to #{channel_id} for #{username}")
     Client.send_message(channel_id, "#{role_name} Its 4:20 for #{username}!!")
+    IO.puts("Finished sending Message to #{channel_id} for #{username}")
   end
 end

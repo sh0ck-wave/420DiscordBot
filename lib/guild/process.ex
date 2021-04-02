@@ -1,5 +1,5 @@
 defmodule Guild.Process do
-  use GenServer, restart: :temporary
+  use GenServer
 
   def init(guild_id) do
     send(self(), :load)

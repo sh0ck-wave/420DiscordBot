@@ -9,7 +9,7 @@ defmodule User.Cache do
     {:ok, nil}
   end
 
-  def handle_call({:create, %User.Id{} = user_id}, _from, state) do
+  def handle_call({:get_or_create, %User.Id{} = user_id}, _from, state) do
     pid = Registry.lookup(:user_registry, user_id)
     |> case do
       [] ->
@@ -23,7 +23,7 @@ defmodule User.Cache do
   def get_user_process(%User.Id{} = user_id) do
     Registry.lookup(:user_registry, user_id)
     |> case do
-      [] -> GenServer.call(__MODULE__, {:create, user_id})
+      [] -> GenServer.call(__MODULE__, {:get_or_create, user_id})
       [{p, _}] -> p
     end
   end

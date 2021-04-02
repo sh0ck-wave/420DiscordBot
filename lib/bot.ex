@@ -86,7 +86,10 @@ defmodule Bot do
 
   def start(_type, _args) do
     RootSupervisor.start_link()
-    User.Loader.start_link("data_store/users")
+    spawn(fn ->
+      User.Loader.run("data_store/users")
+    end)
+
 
 
 
