@@ -29,6 +29,12 @@ defmodule Guild.Process do
     end
   end
 
+  def handle_cast({:set_muted, muted}, %Guild.Data{} = guild) do
+    new_guild = Guild.Data.set_muted(guild, muted)
+    Database.Guild.store(new_guild)
+    {:noreply,  new_guild}
+  end
+
   def handle_cast({:set_role_mention, role}, %Guild.Data{} = guild) do
     new_guild = Guild.Data.set_role_mention(guild, role)
     Database.Guild.store(new_guild)
@@ -47,6 +53,10 @@ defmodule Guild.Process do
 
   def set_role_mention(guild_proc, role) do
     GenServer.cast(guild_proc, {:set_role_mention, role})
+  end
+
+  def set_muted(guild_proc, muted) do
+    GenServer.cast(guild_proc, {:set_muted, muted})
   end
 
   def get_channel(guild_proc) do

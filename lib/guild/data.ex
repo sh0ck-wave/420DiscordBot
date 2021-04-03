@@ -1,5 +1,5 @@
 defmodule Guild.Data do
-  defstruct guild_id: nil, default_channel_id: nil, role_mention: ""
+  defstruct guild_id: nil, default_channel_id: nil, role_mention: "", muted: false
 
   def new(guild_id) do
     %Guild.Data{guild_id: guild_id}
@@ -21,6 +21,10 @@ defmodule Guild.Data do
 
   def set_role_mention(%Guild.Data{} = guild, role) do
     %Guild.Data{ guild | role_mention: role}
+  end
+
+  def set_muted(%Guild.Data{} = guild, muted) do
+    %Guild.Data{ guild | muted: muted}
   end
 
   def get_channel(%Guild.Data{} = guild) do

@@ -20,16 +20,16 @@ defmodule Database.Guild do
 
   def handle_cast({:store, %Guild.Data{} = guild}, db_folder) do
     filename(db_folder, guild.guild_id)
-    |> File.write!(:erlang.term_to_binary(guild))
+    |> File.write!(:erlang.term_to_binary(Map.merge(%Guild.Data{}, guild)))
     {:noreply, db_folder}
   end
 
   def handle_call({:get, guild_id}, _from, db_folder) do
-    data = case File.read(filename(db_folder, guild_id)) do
-      {:ok, contents} -> :erlang.binary_to_term(contents)
-      _ -> nil
+    IO.puts("Loading guild #{guild_id}")
+    case File.read(filename(db_folder, guild_id)) do
+      {:ok, contents} -> {:reply, Map.merge(%Guild.Data{}, :erlang.binary_to_term(contents)), db_folder}
+      _ -> {:reply, nil, db_folder}
     end
-    {:reply, data, db_folder}
   end
 
   def store(%Guild.Data{} = guild) do

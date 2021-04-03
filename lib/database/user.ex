@@ -20,14 +20,14 @@ defmodule Database.User do
 
   def handle_cast({:store, %User.Data{} = user}, db_folder) do
     filename(db_folder, user.id)
-    |> File.write!(:erlang.term_to_binary(%User.Data{user | timer_ref: nil}))
+    |> File.write!(:erlang.term_to_binary(%User.Data{ Map.merge(%User.Data{}, user) | timer_ref: nil}))
     {:noreply, db_folder}
   end
 
   def handle_call({:get, %User.Id{} = user_id}, _from, db_folder) do
     IO.puts("Loading user #{user_id.user_id}")
     case File.read(filename(db_folder, user_id)) do
-      {:ok, contents} -> {:reply, %User.Data{ :erlang.binary_to_term(contents) | timer_ref: nil}, db_folder}
+      {:ok, contents} -> {:reply, %User.Data{ Map.merge(%User.Data{}, :erlang.binary_to_term(contents)) | timer_ref: nil}, db_folder}
       _ -> {:reply, nil, db_folder}
     end
   end

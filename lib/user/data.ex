@@ -5,7 +5,6 @@ defmodule User.Id do
     guild_id = Discord.Message.get_guild_id(message)
     %User.Id{user_id: message.author.id, guild_id: guild_id}
   end
-
 end
 
 defmodule User.Data do
@@ -36,15 +35,23 @@ defmodule User.Data do
     %User.Data{user | timezone: nil, timer_ref: nil}
   end
 
+  defp cancel_timer_ref(%User.Data{timer_ref: nil}) do
+    :ok
+  end
+
+  defp cancel_timer_ref(%User.Data{timer_ref: timer_ref, id: user_id}) do
+    IO.puts("Cancelled old timer for #{user_id.user_id}")
+    Process.cancel_timer(timer_ref, async: false, info: false)
+  end
+
+  def set_timer(%User.Data{timezone: nil} = user, _) do
+    %User.Data{ user | timer_ref: nil}
+  end
+
   def set_timer(%User.Data{} = user, user_proc) do
     new_timer = Process.send_after(user_proc, :notification_event, TimeCalculations.get_ms_to_420(user.timezone))
     IO.puts("Created timer for #{user.id.user_id}")
-    case user.timer_ref do
-      nil -> :ok
-      timer_ref ->
-        IO.puts("Cancelled old timer for #{user.id.user_id}")
-        Process.cancel_timer(timer_ref, async: false, info: false)
-    end
+    cancel_timer_ref(user)
     %User.Data{ user | timer_ref: new_timer}
   end
 
