@@ -23,6 +23,12 @@ defmodule User.Process do
     end
   end
 
+  def handle_info(info, state) do
+    IO.puts("#{state.id.user_id} received unknown info")
+    IO.inspect(info)
+    {:noreply, state}
+  end
+
   def handle_call({:get_state}, _from, %User.Data{}=user) do
     {:reply, user, user}
   end

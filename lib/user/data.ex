@@ -28,10 +28,7 @@ defmodule User.Data do
   end
 
   def remove_timezone(%User.Data{} = user) do
-    case user.timer_ref do
-      nil -> :ok
-      timer_ref -> Process.cancel_timer(timer_ref, async: false, info: false)
-    end
+    cancel_timer_ref(user)
     %User.Data{user | timezone: nil, timer_ref: nil}
   end
 
@@ -40,8 +37,12 @@ defmodule User.Data do
   end
 
   defp cancel_timer_ref(%User.Data{timer_ref: timer_ref, id: user_id}) do
-    IO.puts("Cancelled old timer for #{user_id.user_id}")
-    Process.cancel_timer(timer_ref, async: false, info: false)
+    IO.puts("Started cancelling old timer for #{user_id.user_id}")
+    case Process.read_timer(timer_ref) do
+      false -> :ok
+      _ -> Process.cancel_timer(timer_ref, async: true, info: false)
+    end
+    IO.puts("Finished cancelling old timer for #{user_id.user_id}")
   end
 
   def set_timer(%User.Data{timezone: nil} = user, _) do
