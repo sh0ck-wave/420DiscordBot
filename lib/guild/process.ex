@@ -55,6 +55,10 @@ defmodule Guild.Process do
     GenServer.cast(guild_proc, {:set_role_mention, role})
   end
 
+  def remove_role_mention(guild_proc) do
+    GenServer.cast(guild_proc, {:set_role_mention, nil})
+  end
+
   def set_muted(guild_proc, muted) do
     GenServer.cast(guild_proc, {:set_muted, muted})
   end
